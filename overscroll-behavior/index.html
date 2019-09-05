@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>滚动穿透解决方案</title>
+    <style>
+        *{
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+        }
+        .fixed{
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+        }
+        .row{
+            display: flex;
+            justify-content: space-between;
+        }
+        .reserve{
+            flex-direction: row-reverse;
+        }
+        .col{
+            width: 48%;
+            height: 200px;
+            text-align: center;
+            box-sizing: border-box;
+            background-color: #eee;
+            overflow: scroll;
+            -webkit-overflow-scrolling: touch;
+        }
+        ul{
+            margin-top: 5px;
+            margin-bottom: 0;
+        }
+        li{
+            white-space: nowrap;
+        }
+        li:first-of-type, li:last-of-type{
+            color: #fff;
+            background-color: #a60000;
+        }
+        .overscroll{
+            overscroll-behavior: none;
+        }
+
+        #list4{
+            list-style: none;
+            padding-left: 0;
+        }
+        #list4 li{
+            position: relative;
+        }
+        #list4 li::after{
+            display: block;
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            width: 12px;
+            height: 12px;
+            margin-top: -6px;
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAA/ElEQVRIS+2U0REBMRCGv6uAUqgAFaADKkApKqAFFaADStABHZjfJCYiycbDjZfLzL3c7f3f7p/dbWj5NC3r0wFMh3MWDYApcAAuhsoMWAGbVGwOcAJGwB2YFCBj4OgS2ALrOJkcYAHsXHAOoiol3geugGCK/TilLoohc0CV6VSJK9Bq0xCi+KWzy8zcl2EBFBdDZEPRltCjGkAKcnM2fXn+yx2EsaHn/r3s2luDUFNBKP4AeoHo0JoTCxCLqxX1zmrhdw4lQErcT3XNnLwgpVXhW1G2KPN4ZVRBrFWRE/cWhJCzS6RqkvWjHu0Wa9kVY61LtrrQ/N4B/m/REzPxQBkf6Er1AAAAAElFTkSuQmCC);
+            background-position: center center;
+            background-size: contain;
+        }
+        #list4 li:first-of-type::after,
+        #list4 li:last-of-type::after{
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABEklEQVRIS+2V0XECMQxE31YApZAKIBUAHYQKIKWkgtACFSR0QEpIB1CBGDG+GeOxrfu5P/xp72ml1UonJj6aOD4vglDhqkRmtgDWwEnSpRfFzDbAHvisYVsEv8ASuALvLRIzWwE/KYEvSYcymRbBB/CdwFWSVKUHnwN/wEqSY59O00VmVpJsJXlljA3u2K5NCxLH7wDvSZj5UEY4BxUSl6ErS65RSJAkyeXyq39gUdN8dA9yYKH58LSTdIwGIaygCH4DZlnQt2hOoib7wA0N9eDue7/rWnhUDyqZu88fU12xcHMYe6viKfNSirEk0ap4yNJZFbm7zpJcwniSU3b+8SFqYoQNXRTZMHp/EUQKTf/TvwOtM4IZZwobgQAAAABJRU5ErkJggg==);
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed">
+        <div class="row">
+            <div class="col overscroll">overscroll-behavior</div>
+            <div class="col" id="div">touchmove.prevent</div>
+        </div>
+        <div class="row">
+            <ul class="col overscroll" id="list1"></ul>
+            <ul class="col" id="list2"></ul>
+        </div>
+        <div class="row reserve">
+            <ul class="col" id="list4"></ul>
+        </div>
+    </div>
+    <ul id="list3"></ul>
+    <script>
+        const $list1 = document.querySelector('#list1')
+        const $list2 = document.querySelector('#list2')
+        const $list3 = document.querySelector('#list3')
+        const $list4 = document.querySelector('#list4')
+
+        const tpl1 = index => `<li>overscroll-behavior-${index}</li>`
+        const tpl2 = index => `<li>无尽列表-${index}</li>`
+        const tpl3 = index => `<li>body-${index}</li>`
+        const tpl4 = index => `<li>可变长列表-${index}</li>`
+
+        let count = 50
+        let html1 = '', html2 = '', html3 = '', html4 = ''
+        while(count--){
+            html1 = tpl1(count) + html1
+            html2 = tpl2(count) + html2
+            html3 = tpl3(count) + html3
+            if(count < 20) html4 = tpl4(count) + html4
+        }
+        $list1.innerHTML = html1
+        $list2.innerHTML = html2
+        $list3.innerHTML = html3
+        $list4.innerHTML = html4
+
+        const $div = document.querySelector('#div')
+        $div.addEventListener('touchmove', e=>e.preventDefault())
+        $list2.addEventListener('scroll', e=>{
+            const el = e.target
+            const offset = 1
+            if(el.scrollTop === 0) el.scrollTop += offset
+            if(el.scrollTop === el.scrollHeight - el.offsetHeight) el.scrollTop -= offset
+        })
+
+        $list4.addEventListener('click', e=>{
+            if(e.target.tagName === 'LI'){
+                e.target.remove()
+            }
+        })
+        $list4.addEventListener('touchmove', e=>{
+            const el = e.currentTarget
+            if(el.scrollHeight === el.offsetHeight) e.preventDefault()
+        })
+        $list4.addEventListener('scroll', e=>{
+            const el = e.target
+            const offset = 1
+            if(el.scrollTop === 0) el.scrollTop += offset
+            if(el.scrollTop === el.scrollHeight - el.offsetHeight) el.scrollTop -= offset
+        })
+    </script>
+</body>
+</html>
